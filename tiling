@@ -1,0 +1,346 @@
+#!/bin/bash
+#
+# Tiling windows using xdotool
+# A basic tool to tile windows with xdotool on my 21:9 ultrawides
+#
+# xfce inbuilt tiling support was too restrictive
+#
+# CHANGELOG
+# 20210816 - working
+#
+# EXAMPLE
+# Sizes/Layouts (+any combination)
+#
+# 33/50 x 6     [left|mid|right][top|bottom]    <Super>KP_[123789]
+# +---------++---------++---------+
+# |         ||         ||         |
+# |         ||         ||         |
+# |         ||         ||         |
+# +---------++---------++---------+
+# +---------++---------++---------+
+# |         ||         ||         |
+# |         ||         ||         |
+# |         ||         ||         |
+# +---------++---------++---------+
+# 33/100 x 3    [left|mid|right]-full           <Super><Primary>KP_[1-3]
+# +---------++---------++---------+
+# |         ||         ||         |
+# |         ||         ||         |
+# |         ||         ||         |
+# |         ||         ||         |
+# |         ||         ||         |
+# |         ||         ||         |
+# |         ||         ||         |
+# |         ||         ||         |
+# +---------++---------++---------+
+# 66/100 x 1    [left|right]-2t                 <Super><Primary>KP_[46]
+# +---------++--------------------+
+# |/////////||                    |
+# |\\\\\\\\\||                    |
+# |/////////||                    |
+# |\\\\\\\\\||                    |
+# |/////////||                    |
+# |\\\\\\\\\||                    |
+# |/////////||                    |
+# |\\\\\\\\\||                    |
+# +---------++--------------------+
+# 100/50 x 2    [top|bottom]-full               <Super><Primary>KP_[58]
+# +-------------------------------+
+# |                               |
+# |                               |
+# |                               |
+# +-------------------------------+
+# +-------------------------------+
+# |                               |
+# |                               |
+# |                               |
+# +-------------------------------+
+# 50/100 x 2    [left|right]-full               <Super>KP_[46]
+# +--------------+ +--------------+
+# |              | |              |
+# |              | |              |
+# |              | |              |
+# |              | |              |
+# |              | |              |
+# |              | |              |
+# |              | |              |
+# |              | |              |
+# +--------------+ +--------------+
+# 100/100       full                            <Super>KP_5
+# +-------------------------------+
+# |                               |
+# |                               |
+# |                               |
+# |                               |
+# |                               |
+# |                               |
+# |                               |
+# |                               |
+# +-------------------------------+
+
+#
+# USER MODIFIABLE
+#
+TITLE_BAR=22   # height of the titlebar
+TILE_X=3       # default horiz tiling
+TILE_Y=2       # default vert tiling
+MON_TOTAL=2    # total monitors
+
+function _usage {
+  echo "$0 [left|right]-[top|middle|bottom|full|2t]"
+}
+
+function xfce_install {
+  read -r -p "This will replace your <Super> and <Super><Primary> KP_[1-9] keyboard shortcuts, do you want to continue? [Y/n] " 
+
+  #SUPER
+  declare -A SET1
+  SET1=(
+    [KP_1]='tiling left-bottom'
+    [KP_2]='tiling mid-bottom'
+    [KP_3]='tiling right-bottom'
+    [KP_4]='tiling left'
+    [KP_5]='tiling full'
+    [KP_6]='tiling right'
+    [KP_7]='tiling left-top'
+    [KP_8]='tiling mid-top'
+    [KP_9]='tiling bottom-top'
+  )
+
+  #SUPER+PRIMARY
+  declare -A SET2
+  SET2=(
+    [KP_1]='tiling left-full'
+    [KP_2]='tiling mid-full'
+    [KP_3]='tiling right-full'
+    [KP_4]='tiling left-2t'
+    [KP_5]='tiling bottom-full'
+    [KP_6]='tiling right-2t'
+    #[KP_7]='tiling left-full'
+    #[KP_8]='tiling left-full'
+    [KP_9]='tiling top-full'
+  )
+
+  case $input in
+    Y|y)
+      echo "OK, we will install"
+
+      for KEY in "${!SET1[@]}"
+      do
+          echo xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>$KEY" -s "${SET1[$KEY]}"
+      done
+
+      for KEY in "${!SET2[@]}"
+      do
+          echo xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super><Primary>$KEY" -s "${SET2[$KEY]}"
+      done
+
+      ;;
+    *)
+      echo "User aborted install, exiting"
+esac
+exit
+}
+
+#
+# XDOTOOL
+#
+XDT=$(which xdotool)
+
+#
+# CURRENT DISPLAY
+#
+DISP_GEOM=$($XDT getdisplaygeometry)
+DISP_X=$(echo $DISP_GEOM | awk '{print $1}')
+DISP_Y=$(echo $DISP_GEOM | awk '{print $2}')
+
+#
+# SECOND DISPLAY 0,0
+#
+OFFSET_X=$DISP_X
+OFFSET_Y=0
+
+#
+# ACTIVE WINDOW
+#
+WM_ACTIVE=$($XDT getactivewindow)
+WM_ACT_GEOM=$($XDT getwindowgeometry $WM_ACTIVE)
+WM_ACT_POSX=$(echo $WM_ACT_GEOM | awk '{print $4}' | cut -d',' -f1)
+WM_ACT_POSY=$(echo $WM_ACT_GEOM | awk '{print $4}' | cut -d',' -f2)
+
+#
+# DEFAULT WINDOW SIZES (%)
+#
+WM_X_PCT=33
+WM_Y_PCT=50
+
+#
+# ACTIVE MONITOR
+#
+if [ $WM_ACT_POSX -gt $OFFSET_X ]
+then
+  MON_NUM=1
+else
+  MON_NUM=0
+fi
+
+# 
+# LAYOUTS
+#
+case $1 in
+  left-top)
+    POS_X=0
+    POS_Y=0
+    ;;
+  left-bottom)
+    POS_X=0
+    POS_Y=1
+    ;;
+  mid-top)
+    POS_X=1
+    POS_Y=0
+    ;;
+  mid-bottom)
+    POS_X=1
+    POS_Y=1
+    ;;
+  right-top)
+    POS_X=2
+    POS_Y=0
+    ;;
+  right-bottom)
+    POS_X=2
+    POS_Y=1
+    ;;
+  full)
+    POS_X=0
+    POS_Y=0
+    WM_X_PCT=100
+    WM_Y_PCT=100
+    ;;
+  left)
+    POS_X=0
+    POS_Y=0
+    WM_X_PCT=50
+    WM_Y_PCT=100
+    ;;
+  right)
+    POS_X=50
+    POS_Y=0
+    WM_X_PCT=50
+    WM_Y_PCT=100
+    ;;
+  left-full)
+    POS_X=0
+    POS_Y=0
+    WM_X_PCT=33
+    WM_Y_PCT=100
+    ;;
+  mid-full)
+    POS_X=1
+    POS_Y=0
+    WM_X_PCT=33
+    WM_Y_PCT=100
+    ;;
+  right-full)
+    POS_X=2
+    POS_Y=0
+    WM_X_PCT=33
+    WM_Y_PCT=100
+    ;;
+  left-2t)
+    POS_X=0
+    POS_Y=0
+    WM_X_PCT=66
+    WM_Y_PCT=100
+    ;;
+  right-2t)
+    POS_X=33
+    POS_Y=0
+    WM_X_PCT=66
+    WM_Y_PCT=100
+    ;;
+  top-full)
+    POS_X=0
+    POS_Y=0
+    WM_X_PCT=100
+    WM_Y_PCT=50
+    ;;
+  bottom-full)
+    POS_X=0
+    POS_Y=1
+    WM_X_PCT=100
+    WM_Y_PCT=50
+    ;;
+  xfce-install)
+    xfce_install
+    ;;
+  *)
+    _usage
+    exit
+esac
+
+#
+# WINDOW SIZE PCT(%)
+#
+case $WM_X_PCT in
+  33)
+    WIN_X_SIZE=$(( $DISP_X / $TILE_X ))
+    ;;
+  50)
+    WIN_X_SIZE=$(( $DISP_X / 2 ))
+    ;;
+  66)
+    WIN_X_SIZE=$(( ( $DISP_X / 3 ) + ( $DISP_X / 3 ) ))
+    ;;
+  100)
+    WIN_X_SIZE=$DISP_X
+    ;;
+esac
+
+case $WM_Y_PCT in
+  33|50)
+    WIN_Y_SIZE=$(( ( $DISP_Y / $TILE_Y ) - ( $TITLE_BAR * $TILE_Y )))
+    ;;
+  100)
+    WIN_Y_SIZE=$(( $DISP_Y - ( $TITLE_BAR * $TILE_Y ) ))
+    ;;
+esac
+
+#
+# APPLY WINDOW SIZE
+#
+$XDT windowsize $WM_ACTIVE $WIN_X_SIZE $WIN_Y_SIZE
+
+#
+# POSITIONAL MOD
+#
+case $POS_Y in
+  1)
+    TITLE_BAR=$(( $TITLE_BAR * $TILE_Y + ( $TITLE_BAR / 2 ) ))
+    ;;
+  *)
+    TITLE_BAR=0
+    ;;
+esac
+
+case $POS_X in
+  33)
+    WM_MV_X=$(( ( $OFFSET_X * $MON_NUM ) + ( $DISP_X / 3 ) )) 
+    ;;
+  50)
+    WM_MV_X=$(( ( $OFFSET_X * $MON_NUM ) + ( $DISP_X / 2 ) )) 
+    ;;
+  *)
+    WM_MV_X=$(( ( $OFFSET_X * $MON_NUM ) + ( $POS_X * $WIN_X_SIZE ) )) 
+    ;;
+esac
+
+WM_MV_Y=$(( ( $OFFSET_Y * $MON_NUM ) + ( $POS_Y * $WIN_Y_SIZE ) + $TITLE_BAR ))
+
+
+#
+# MOVE THE WINDOW
+#
+$XDT windowmove $WM_ACTIVE $WM_MV_X $WM_MV_Y
+
