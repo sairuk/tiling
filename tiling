@@ -11,6 +11,9 @@
 # EXAMPLE
 # Sizes/Layouts (+any combination)
 #
+# TODO
+# reset conflicting xfwm tiling shortcuts if they exist
+#
 # 33/50 x 6     [left|mid|right][top|bottom]    <Super>KP_[123789]
 # +---------++---------++---------+
 # |         ||         ||         |
@@ -91,7 +94,7 @@ function _usage {
 }
 
 function xfce_install {
-  read -r -p "This will replace your <Super> and <Super><Primary> KP_[1-9] keyboard shortcuts, do you want to continue? [Y/n] " 
+  read -r -p "This will replace your <Super> and <Super><Primary> KP_[1-9] keyboard shortcuts, do you want to continue? [Y/n] " INPUT
 
   #SUPER
   declare -A SET1
@@ -121,18 +124,18 @@ function xfce_install {
     [KP_9]='tiling top-full'
   )
 
-  case $input in
+  case $INPUT in
     Y|y)
       echo "OK, we will install"
 
       for KEY in "${!SET1[@]}"
       do
-          echo xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>$KEY" -s "${SET1[$KEY]}"
+          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>$KEY" -s "${SET1[$KEY]}"
       done
 
       for KEY in "${!SET2[@]}"
       do
-          echo xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super><Primary>$KEY" -s "${SET2[$KEY]}"
+          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super><Primary>$KEY" -s "${SET2[$KEY]}"
       done
 
       ;;
