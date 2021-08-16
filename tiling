@@ -105,7 +105,7 @@ function xfce_install {
     [KP_6]='tiling right'
     [KP_7]='tiling left-top'
     [KP_8]='tiling mid-top'
-    [KP_9]='tiling bottom-top'
+    [KP_9]='tiling right-top'
   )
 
   #SUPER+PRIMARY
