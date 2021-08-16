@@ -6,13 +6,11 @@
 # xfce inbuilt tiling support was too restrictive
 #
 # CHANGELOG
-# 20210816 - working
+# 20210816 - working, added reset for conflicting keys
 #
 # EXAMPLE
 # Sizes/Layouts (+any combination)
 #
-# TODO
-# reset conflicting xfwm tiling shortcuts if they exist
 #
 # 33/50 x 6     [left|mid|right][top|bottom]    <Super>KP_[123789]
 # +---------++---------++---------+
@@ -120,8 +118,8 @@ function xfce_install {
     [KP_5]='tiling bottom-full'
     [KP_6]='tiling right-2t'
     #[KP_7]='tiling left-full'
-    #[KP_8]='tiling left-full'
-    [KP_9]='tiling top-full'
+    [KP_8]='tiling top-full'
+    #[KP_9]='tiling top-full'
   )
 
   case $INPUT in
@@ -130,12 +128,18 @@ function xfce_install {
 
       for KEY in "${!SET1[@]}"
       do
-          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super>$KEY" -s "${SET1[$KEY]}"
+          MODKEY="<Super>"
+          echo "Adding ${SET1[$KEY]} for ${MODKEY}${KEY}"
+          xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}" -r
+          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}"
       done
 
       for KEY in "${!SET2[@]}"
       do
-          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/<Super><Primary>$KEY" -s "${SET2[$KEY]}"
+          MODKEY="<Super><Primary>"
+          echo "Adding ${SET1[$KEY]} for ${MODKEY}${KEY}"
+          xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}" -r
+          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}"
       done
 
       ;;
