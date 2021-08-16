@@ -137,9 +137,9 @@ function xfce_install {
       for KEY in "${!SET2[@]}"
       do
           MODKEY="<Super><Primary>"
-          echo "Adding ${SET1[$KEY]} for ${MODKEY}${KEY}"
-          xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}" -r
-          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}"
+          echo "Adding ${SET2[$KEY]} for ${MODKEY}${KEY}"
+          xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET2[$KEY]}" -r
+          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET2[$KEY]}"
       done
 
       ;;
