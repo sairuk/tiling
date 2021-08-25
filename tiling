@@ -6,13 +6,15 @@
 # xfce inbuilt tiling support was too restrictive
 #
 # CHANGELOG
+# 20210825 - added 66/50 moved assignments around, second set makes more sense
+#          - added 3rd misc set
 # 20210816 - working, added reset for conflicting keys
 #
 # EXAMPLE
 # Sizes/Layouts (+any combination)
 #
 #
-# 33/50 x 6     [left|mid|right][top|bottom]    <Super>KP_[123789]
+# 33/50 x 6     [left|mid|right][top|bottom]
 # +---------++---------++---------+
 # |         ||         ||         |
 # |         ||         ||         |
@@ -23,7 +25,7 @@
 # |         ||         ||         |
 # |         ||         ||         |
 # +---------++---------++---------+
-# 33/100 x 3    [left|mid|right]-full           <Super><Primary>KP_[1-3]
+# 33/100 x 3    [left|mid|right]-full
 # +---------++---------++---------+
 # |         ||         ||         |
 # |         ||         ||         |
@@ -34,7 +36,7 @@
 # |         ||         ||         |
 # |         ||         ||         |
 # +---------++---------++---------+
-# 66/100 x 1    [left|right]-2t                 <Super><Primary>KP_[46]
+# 66/100 x 1    [left|right]-2t
 # +---------++--------------------+
 # |/////////||                    |
 # |\\\\\\\\\||                    |
@@ -45,7 +47,7 @@
 # |/////////||                    |
 # |\\\\\\\\\||                    |
 # +---------++--------------------+
-# 100/50 x 2    [top|bottom]-full               <Super><Primary>KP_[58]
+# 100/50 x 2    [top|bottom]-full
 # +-------------------------------+
 # |                               |
 # |                               |
@@ -56,7 +58,7 @@
 # |                               |
 # |                               |
 # +-------------------------------+
-# 50/100 x 2    [left|right]-full               <Super>KP_[46]
+# 50/100 x 2    [left|right]-full
 # +--------------+ +--------------+
 # |              | |              |
 # |              | |              |
@@ -67,7 +69,7 @@
 # |              | |              |
 # |              | |              |
 # +--------------+ +--------------+
-# 100/100       full                            <Super>KP_5
+# 100/100       full
 # +-------------------------------+
 # |                               |
 # |                               |
@@ -78,6 +80,18 @@
 # |                               |
 # |                               |
 # +-------------------------------+
+# 66/50 x 2    [left|right]-[top|bottom]-2t
+# +---------++--------------------+
+# +---------++--------------------+
+# |/////////||                    |
+# |\\\\\\\\\||                    |
+# |/////////||                    |
+# +---------++--------------------+
+# +---------++--------------------+
+# |/////////||                    |
+# |\\\\\\\\\||                    |
+# |/////////||                    |
+# +---------++--------------------+
 
 #
 # USER MODIFIABLE
@@ -88,11 +102,11 @@ TILE_Y=2       # default vert tiling
 MON_TOTAL=2    # total monitors
 
 function _usage {
-  echo "$0 [left|right]-[top|middle|bottom|full|2t]"
+  echo "$0 [left|right|mid]-[top|bottom|full]-[2t]"
 }
 
 function xfce_install {
-  read -r -p "This will replace your <Super> and <Super><Primary> KP_[1-9] keyboard shortcuts, do you want to continue? [Y/n] " INPUT
+  read -r -p "This will replace your <Super> and <Super>/+<Ctrl|Alt> KP_[1-9] keyboard shortcuts, do you want to continue? [Y/n] " INPUT
 
   #SUPER
   declare -A SET1
@@ -100,26 +114,40 @@ function xfce_install {
     [KP_1]='tiling left-bottom'
     [KP_2]='tiling mid-bottom'
     [KP_3]='tiling right-bottom'
-    [KP_4]='tiling left'
-    [KP_5]='tiling full'
-    [KP_6]='tiling right'
+    [KP_4]='tiling left-full'
+    [KP_5]='tiling mid-full'
+    [KP_6]='tiling right-full'
     [KP_7]='tiling left-top'
     [KP_8]='tiling mid-top'
     [KP_9]='tiling right-top'
   )
 
-  #SUPER+PRIMARY
+  #SUPER+CTRL
   declare -A SET2
   SET2=(
-    [KP_1]='tiling left-full'
-    [KP_2]='tiling mid-full'
-    [KP_3]='tiling right-full'
+    [KP_1]='tiling left-bottom-2t'
+    [KP_2]='tiling bottom-full'
+    [KP_3]='tiling right-bottom-2t'
     [KP_4]='tiling left-2t'
-    [KP_5]='tiling bottom-full'
+    [KP_5]='tiling full'
     [KP_6]='tiling right-2t'
-    #[KP_7]='tiling left-full'
+    [KP_7]='tiling left-top-2t'
     [KP_8]='tiling top-full'
-    #[KP_9]='tiling top-full'
+    [KP_9]='tiling right-top-2t'
+  )
+
+  #SUPER+ALT
+  declare -A SET3
+  SET3=(
+    [KP_1]='tiling left'
+    [KP_2]='tiling full'
+    [KP_3]='tiling right'
+    [KP_4]=''
+    [KP_5]=''
+    [KP_6]=''
+    [KP_7]=''
+    [KP_8]=''
+    [KP_9]=''
   )
 
   case $INPUT in
@@ -129,25 +157,55 @@ function xfce_install {
       for KEY in "${!SET1[@]}"
       do
           MODKEY="<Super>"
-          echo "Adding ${SET1[$KEY]} for ${MODKEY}${KEY}"
-          xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}" -r
-          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}"
+          if [ -z "${SET1[$KEY]}" ]
+          then
+            echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
+          else
+            xfce_uninstall ${MODKEY}${KEY} ${SET1[$KEY]}
+            echo "Adding ${SET1[$KEY]} for ${MODKEY}${KEY}"
+            xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}"
+          fi
       done
 
       for KEY in "${!SET2[@]}"
       do
-          MODKEY="<Super><Primary>"
-          echo "Adding ${SET2[$KEY]} for ${MODKEY}${KEY}"
-          xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET2[$KEY]}" -r
-          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET2[$KEY]}"
+          if [ -z "${SET2[$KEY]}" ]
+          then
+            echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
+          else
+            MODKEY="<Super><Ctrl>"
+            xfce_uninstall ${MODKEY}${KEY} ${SET2[$KEY]}
+            echo "Adding ${SET2[$KEY]} for ${MODKEY}${KEY}"
+            xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET2[$KEY]}"
+          fi
+      done
+
+      for KEY in "${!SET3[@]}"
+      do
+          if [ -z "${SET3[$KEY]}" ]
+          then
+            echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
+          else
+            MODKEY="<Super><Alt>"
+            xfce_uninstall ${MODKEY}${KEY} ${SET3[$KEY]}
+            echo "Adding ${SET3[$KEY]} for ${MODKEY}${KEY}"
+            xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET3[$KEY]}"
+          fi
       done
 
       ;;
     *)
       echo "User aborted install, exiting"
 esac
-exit
 }
+
+function xfce_uninstall {
+  local KEY=$1
+  local VALUE=$2
+  echo "Reset value ${VALUE} for  ${KEY}"
+  xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/${KEY}" -s "${VALUE}" -r
+}
+
 
 #
 # XDOTOOL
@@ -204,11 +262,11 @@ case $1 in
     POS_Y=1
     ;;
   mid-top)
-    POS_X=1
+    POS_X=33
     POS_Y=0
     ;;
   mid-bottom)
-    POS_X=1
+    POS_X=33
     POS_Y=1
     ;;
   right-top)
@@ -279,8 +337,33 @@ case $1 in
     WM_X_PCT=100
     WM_Y_PCT=50
     ;;
+  left-top-2t)
+    POS_X=0
+    POS_Y=0
+    WM_X_PCT=66
+    WM_Y_PCT=50
+    ;;
+  left-bottom-2t)
+    POS_X=0
+    POS_Y=1
+    WM_X_PCT=66
+    WM_Y_PCT=50
+    ;;
+  right-top-2t)
+    POS_X=33
+    POS_Y=0
+    WM_X_PCT=66
+    WM_Y_PCT=50
+    ;;
+  right-bottom-2t)
+    POS_X=33
+    POS_Y=1
+    WM_X_PCT=66
+    WM_Y_PCT=50
+    ;;
   xfce-install)
     xfce_install
+    exit
     ;;
   *)
     _usage
