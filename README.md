@@ -17,7 +17,7 @@ If you are using XFCE you can run ``` tiling xfce-install ``` which will run xfc
  size (%)      args                            key combo
  ------------------------------------------------------------------------------
 
- 33/50 x 6     [left|mid|right][top|bottom]    <Super>KP_[123789]
+ 33/50 x 6     [left|mid|right][top|bottom]
  +---------++---------++---------+
  |         ||         ||         |
  |         ||         ||         |
@@ -29,7 +29,7 @@ If you are using XFCE you can run ``` tiling xfce-install ``` which will run xfc
  |         ||         ||         |
  +---------++---------++---------+
 
- 33/100 x 3    [left|mid|right]-full           <Super><Primary>KP_[1-3]
+ 33/100 x 3    [left|mid|right]-full
  +---------++---------++---------+
  |         ||         ||         |
  |         ||         ||         |
@@ -41,7 +41,7 @@ If you are using XFCE you can run ``` tiling xfce-install ``` which will run xfc
  |         ||         ||         |
  +---------++---------++---------+
 
- 66/100 x 1    [left|right]-2t                 <Super><Primary>KP_[46]
+ 66/100 x 1    [left|right]-2t
  +---------++--------------------+
  |/////////||                    |
  |\\\\\\\\\||                    |
@@ -53,7 +53,7 @@ If you are using XFCE you can run ``` tiling xfce-install ``` which will run xfc
  |\\\\\\\\\||                    |
  +---------++--------------------+
 
- 100/50 x 2    [top|bottom]-full               <Super><Primary>KP_[58]
+ 100/50 x 2    [top|bottom]-full
  +-------------------------------+
  |                               |
  |                               |
@@ -65,7 +65,7 @@ If you are using XFCE you can run ``` tiling xfce-install ``` which will run xfc
  |                               |
  +-------------------------------+
 
- 50/100 x 2    [left|right]-full               <Super>KP_[46]
+ 50/100 x 2    [left|right]-full
  +--------------+ +--------------+
  |              | |              |
  |              | |              |
@@ -77,7 +77,7 @@ If you are using XFCE you can run ``` tiling xfce-install ``` which will run xfc
  |              | |              |
  +--------------+ +--------------+
 
- 100/100       full                            <Super>KP_5
+ 100/100       full 
  +-------------------------------+
  |                               |
  |                               |
@@ -88,4 +88,18 @@ If you are using XFCE you can run ``` tiling xfce-install ``` which will run xfc
  |                               |
  |                               |
  +-------------------------------+
+
+ 66/50 x 2    [left|right]-[top|bottom]-2t
+ +---------++--------------------+
+ +---------++--------------------+
+ |/////////||                    |
+ |\\\\\\\\\||                    |
+ |/////////||                    |
+ +---------++--------------------+
+ +---------++--------------------+
+ |/////////||                    |
+ |\\\\\\\\\||                    |
+ |/////////||                    |
+ +---------++--------------------+
+
 ```
