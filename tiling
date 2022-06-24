@@ -6,6 +6,7 @@
 # xfce inbuilt tiling support was too restrictive
 #
 # CHANGELOG
+# 20220624 - remove prompt for install
 # 20210825 - added 66/50 moved assignments around, second set makes more sense
 #          - added 3rd misc set
 # 20210816 - working, added reset for conflicting keys
@@ -106,7 +107,7 @@ function _usage {
 }
 
 function xfce_install {
-  read -r -p "This will replace your <Super> and <Super>/+<Ctrl|Alt> KP_[1-9] keyboard shortcuts, do you want to continue? [Y/n] " INPUT
+  #read -r -p "This will replace your <Super> and <Super>/+<Ctrl|Alt> KP_[1-9] keyboard shortcuts, do you want to continue? [Y/n] " INPUT
 
   #SUPER
   declare -A SET1
@@ -150,53 +151,44 @@ function xfce_install {
     [KP_9]=''
   )
 
-  case $INPUT in
-    Y|y)
-      echo "OK, we will install"
+    for KEY in "${!SET1[@]}"
+    do
+        MODKEY="<Super>"
+        if [ -z "${SET1[$KEY]}" ]
+        then
+          echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
+        else
+          xfce_uninstall ${MODKEY}${KEY} ${SET1[$KEY]}
+          echo "Adding ${SET1[$KEY]} for ${MODKEY}${KEY}"
+          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}"
+        fi
+    done
 
-      for KEY in "${!SET1[@]}"
-      do
-          MODKEY="<Super>"
-          if [ -z "${SET1[$KEY]}" ]
-          then
-            echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
-          else
-            xfce_uninstall ${MODKEY}${KEY} ${SET1[$KEY]}
-            echo "Adding ${SET1[$KEY]} for ${MODKEY}${KEY}"
-            xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET1[$KEY]}"
-          fi
-      done
+    for KEY in "${!SET2[@]}"
+    do
+        if [ -z "${SET2[$KEY]}" ]
+        then
+          echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
+        else
+          MODKEY="<Super><Ctrl>"
+          xfce_uninstall ${MODKEY}${KEY} ${SET2[$KEY]}
+          echo "Adding ${SET2[$KEY]} for ${MODKEY}${KEY}"
+          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET2[$KEY]}"
+        fi
+    done
 
-      for KEY in "${!SET2[@]}"
-      do
-          if [ -z "${SET2[$KEY]}" ]
-          then
-            echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
-          else
-            MODKEY="<Super><Ctrl>"
-            xfce_uninstall ${MODKEY}${KEY} ${SET2[$KEY]}
-            echo "Adding ${SET2[$KEY]} for ${MODKEY}${KEY}"
-            xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET2[$KEY]}"
-          fi
-      done
-
-      for KEY in "${!SET3[@]}"
-      do
-          if [ -z "${SET3[$KEY]}" ]
-          then
-            echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
-          else
-            MODKEY="<Super><Alt>"
-            xfce_uninstall ${MODKEY}${KEY} ${SET3[$KEY]}
-            echo "Adding ${SET3[$KEY]} for ${MODKEY}${KEY}"
-            xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET3[$KEY]}"
-          fi
-      done
-
-      ;;
-    *)
-      echo "User aborted install, exiting"
-esac
+    for KEY in "${!SET3[@]}"
+    do
+        if [ -z "${SET3[$KEY]}" ]
+        then
+          echo "Empty Assignment, will not change for ${MODKEY}${KEY}"
+        else
+          MODKEY="<Super><Alt>"
+          xfce_uninstall ${MODKEY}${KEY} ${SET3[$KEY]}
+          echo "Adding ${SET3[$KEY]} for ${MODKEY}${KEY}"
+          xfconf-query -n -t string -c xfce4-keyboard-shortcuts -p "/commands/custom/${MODKEY}${KEY}" -s "${SET3[$KEY]}"
+        fi
+    done
 }
 
 function xfce_uninstall {
